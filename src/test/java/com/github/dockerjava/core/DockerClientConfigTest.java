@@ -16,12 +16,12 @@ public class DockerClientConfigTest {
     public static final DockerClientConfig EXAMPLE_CONFIG = newExampleConfig();
 
     private static DockerClientConfig newExampleConfig() {
-        return new DockerClientConfig(URI.create("http://foo"), "bar", "baz", "qux", "blam", "wham", "flam", 877, false, new LocalDirectorySSLConfig("flim"), 20, 2);
+        return new DockerClientConfig(URI.create("http://foo"), "bar", "baz", "qux", "blam", "wham", "flam", "chupa", "chups", 877, false, new LocalDirectorySSLConfig("flim"), 20, 2);
     }
 
     @Test
     public void string() throws Exception {
-        assertEquals("DockerClientConfig{uri=http://foo, version='bar', username='baz', password='qux', email='blam', serverAddress='wham', dockerCfgPath='flam', sslConfig='LocalDirectorySSLConfig{dockerCertPath=flim}', readTimeout=877, loggingFilterEnabled=false}",
+        assertEquals("DockerClientConfig{uri=http://foo, version='bar', username='baz', password='qux', httpUsername='chupa', httpPassword='chups', email='blam', serverAddress='wham', dockerCfgPath='flam', sslConfig='LocalDirectorySSLConfig{dockerCertPath=flim}', readTimeout=877, loggingFilterEnabled=false}",
                 EXAMPLE_CONFIG.toString());
     }
 
@@ -123,6 +123,8 @@ public class DockerClientConfigTest {
         env.put("DOCKER_VERSION", "bar");
         env.put("DOCKER_USERNAME", "baz");
         env.put("DOCKER_PASSWORD", "qux");
+        env.put("DOCKER_HTTP_USERNAME", "chupa");
+        env.put("DOCKER_HTTP_PASSWORD", "chups");
         env.put("DOCKER_EMAIL", "blam");
         env.put("DOCKER_SERVER_ADDRESS", "wham");
         env.put("DOCKER_CERT_PATH", "flim");
@@ -171,6 +173,8 @@ public class DockerClientConfigTest {
         systemProperties.setProperty("docker.io.version", "bar");
         systemProperties.setProperty("docker.io.username", "baz");
         systemProperties.setProperty("docker.io.password", "qux");
+        systemProperties.setProperty("docker.io.http.username", "chupa");
+        systemProperties.setProperty("docker.io.http.password", "chups");
         systemProperties.setProperty("docker.io.email", "blam");
         systemProperties.setProperty("docker.io.serverAddress", "wham");
         systemProperties.setProperty("docker.io.dockerCertPath", "flim");

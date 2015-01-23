@@ -14,10 +14,12 @@ import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
@@ -62,6 +64,7 @@ public class DockerCmdExecFactoryImpl implements DockerCmdExecFactory {
         } catch(Exception ex) {
             throw new DockerClientException("Error in SSL Configuration", ex);
         }
+        if (sslContext == null) sslContext = SslConfigurator.getDefaultContext();
 
         PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(getSchemeRegistry(originalUri, sslContext));
         connManager.setMaxTotal(dockerClientConfig.getMaxTotalConnections());
@@ -70,9 +73,7 @@ public class DockerCmdExecFactoryImpl implements DockerCmdExecFactory {
 
         ClientBuilder clientBuilder = ClientBuilder.newBuilder().withConfig(clientConfig);
 
-        if (sslContext != null) {
-            clientBuilder.sslContext(sslContext);
-        }
+        clientBuilder.sslContext(sslContext);
 
         client = clientBuilder.build();
 
@@ -86,6 +87,15 @@ public class DockerCmdExecFactoryImpl implements DockerCmdExecFactory {
         } else {
             baseResource = webResource.path("v" + dockerClientConfig.getVersion());
         }
+        
+        if (dockerClientConfig.getHttpUsername() != null && !dockerClientConfig.getHttpUsername().isEmpty() ) {
+            HttpAuthenticationFeature basicAuth = HttpAuthenticationFeature.basic(
+                    dockerClientConfig.getHttpUsername(),
+                    dockerClientConfig.getHttpPassword()
+            );
+            baseResource.register(basicAuth);
+        }
+
     }
 
     private org.apache.http.config.Registry<ConnectionSocketFactory> getSchemeRegistry(final URI originalUri, SSLContext sslContext) {

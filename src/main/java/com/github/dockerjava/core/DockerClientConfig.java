@@ -36,6 +36,10 @@ public class DockerClientConfig implements Serializable {
     // connection pooling properties
     private static final String DOCKER_IO_MAX_PER_ROUTE_PROPERTY = "docker.io.perRouteConnections";
     private static final String DOCKER_IO_MAX_TOTAL_PROPERTY = "docker.io.totalConnections";
+    
+    private static final String DOCKER_IO_HTTP_USERNAME_PROPERTY = "docker.io.http.username";
+    private static final String DOCKER_IO_HTTP_PASSWORD_PROPERTY = "docker.io.http.password";
+    
     /**
      * A map from the environment name to the interval name.
      */
@@ -44,6 +48,8 @@ public class DockerClientConfig implements Serializable {
             .put("DOCKER_VERSION", DOCKER_IO_VERSION_PROPERTY)
             .put("DOCKER_USERNAME", DOCKER_IO_USERNAME_PROPERTY)
             .put("DOCKER_PASSWORD", DOCKER_IO_PASSWORD_PROPERTY)
+            .put("DOCKER_HTTP_USERNAME", DOCKER_IO_HTTP_USERNAME_PROPERTY)
+            .put("DOCKER_HTTP_PASSWORD", DOCKER_IO_HTTP_PASSWORD_PROPERTY)
             .put("DOCKER_EMAIL", DOCKER_IO_EMAIL_PROPERTY)
             .put("DOCKER_SERVER_ADDRESS", DOCKER_IO_SERVER_ADDRESS_PROPERTY)
             .put("DOCKER_READ_TIMEOUT", DOCKER_IO_READ_TIMEOUT_PROPERTY)
@@ -53,7 +59,7 @@ public class DockerClientConfig implements Serializable {
             .build();
     private static final String DOCKER_IO_PROPERTIES_PROPERTY = "docker.io.properties";
     private URI uri;
-    private final String version, username, password, email, serverAddress, dockerCfgPath;
+    private final String version, username, password, email, serverAddress, dockerCfgPath, httpUsername, httpPassword;
     private final Integer readTimeout;
     private final boolean loggingFilterEnabled;
     private final SSLConfig sslConfig;
@@ -62,7 +68,8 @@ public class DockerClientConfig implements Serializable {
     private final int maxPerRouteConnections;
 
     DockerClientConfig(URI uri, String version, String username, String password, String email, String serverAddress,
-                       String dockerCfgPath, Integer readTimeout, boolean loggingFilterEnabled, SSLConfig sslConfig,
+                       String dockerCfgPath, String httpUsername, String httpPassword,
+                       Integer readTimeout, boolean loggingFilterEnabled, SSLConfig sslConfig,
                        int maxTotalConns, int maxPerRouteConns) {
         this.uri = uri;
         this.version = version;
@@ -71,6 +78,8 @@ public class DockerClientConfig implements Serializable {
         this.email = email;
         this.serverAddress = serverAddress;
         this.dockerCfgPath = dockerCfgPath;
+        this.httpUsername = httpUsername;
+        this.httpPassword = httpPassword;
         this.readTimeout = readTimeout;
         this.loggingFilterEnabled = loggingFilterEnabled;
         this.sslConfig = sslConfig;
@@ -171,6 +180,8 @@ public class DockerClientConfig implements Serializable {
                 DOCKER_IO_VERSION_PROPERTY,
                 DOCKER_IO_USERNAME_PROPERTY,
                 DOCKER_IO_PASSWORD_PROPERTY,
+                DOCKER_IO_HTTP_USERNAME_PROPERTY,
+                DOCKER_IO_HTTP_PASSWORD_PROPERTY,
                 DOCKER_IO_EMAIL_PROPERTY,
                 DOCKER_IO_SERVER_ADDRESS_PROPERTY,
                 DOCKER_IO_READ_TIMEOUT_PROPERTY,
@@ -243,7 +254,15 @@ public class DockerClientConfig implements Serializable {
     public String getDockerCfgPath() {
         return dockerCfgPath;
     }
-    
+
+    public String getHttpPassword() {
+        return httpPassword;
+    }
+
+    public String getHttpUsername() {
+        return httpUsername;
+    }
+
     private AuthConfig getAuthConfig() {
     	AuthConfig authConfig = null;
     	if(getUsername() != null) {
@@ -306,6 +325,9 @@ public class DockerClientConfig implements Serializable {
         if (username != null ? !username.equals(that.username) : that.username != null) return false;
         if (version != null ? !version.equals(that.version) : that.version != null) return false;
 
+        if (httpUsername != null ? !httpUsername.equals(that.httpUsername) : that.httpUsername != null) return false;
+        if (httpPassword != null ? !httpPassword.equals(that.httpPassword) : that.httpPassword != null) return false;
+
         return true;
     }
 
@@ -315,6 +337,8 @@ public class DockerClientConfig implements Serializable {
         result = 31 * result + (version != null ? version.hashCode() : 0);
         result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + (httpUsername != null ? httpUsername .hashCode() : 0);
+        result = 31 * result + (httpPassword != null ? httpPassword.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (serverAddress != null ? serverAddress.hashCode() : 0);
         result = 31 * result + (dockerCfgPath != null ? dockerCfgPath.hashCode() : 0);
@@ -331,6 +355,8 @@ public class DockerClientConfig implements Serializable {
                 ", version='" + version + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
+                ", httpUsername='" + httpUsername + '\'' +
+                ", httpPassword='" + httpPassword + '\'' +
                 ", email='" + email + '\'' +
                 ", serverAddress='" + serverAddress + '\'' +
                 ", dockerCfgPath='" + dockerCfgPath + '\'' +
@@ -342,7 +368,7 @@ public class DockerClientConfig implements Serializable {
 
     public static class DockerClientConfigBuilder {
         private URI uri;
-        private String version, username, password, email, serverAddress, dockerCfgPath;
+        private String version, username, password, email, serverAddress, dockerCfgPath, httpUsername, httpPassword;
         private Integer readTimeout, maxTotalConnections, maxPerRouteConnections;
         private boolean loggingFilterEnabled;
         private SSLConfig sslConfig;
@@ -358,6 +384,8 @@ public class DockerClientConfig implements Serializable {
                     .withVersion(p.getProperty(DOCKER_IO_VERSION_PROPERTY))
                     .withUsername(p.getProperty(DOCKER_IO_USERNAME_PROPERTY))
                     .withPassword(p.getProperty(DOCKER_IO_PASSWORD_PROPERTY))
+                    .withHttpUsername(p.getProperty(DOCKER_IO_HTTP_USERNAME_PROPERTY))
+                    .withHttpPassword(p.getProperty(DOCKER_IO_HTTP_PASSWORD_PROPERTY))
                     .withEmail(p.getProperty(DOCKER_IO_EMAIL_PROPERTY))
                     .withServerAddress(p.getProperty(DOCKER_IO_SERVER_ADDRESS_PROPERTY))
                     .withReadTimeout(Integer.valueOf(p.getProperty(DOCKER_IO_READ_TIMEOUT_PROPERTY, "0")))
@@ -387,6 +415,16 @@ public class DockerClientConfig implements Serializable {
 
         public final DockerClientConfigBuilder withPassword(String password) {
             this.password = password;
+            return this;
+        }
+
+        public final DockerClientConfigBuilder withHttpUsername(String username) {
+            this.httpUsername = username;
+            return this;
+        }
+
+        public final DockerClientConfigBuilder withHttpPassword(String password) {
+            this.httpPassword = password;
             return this;
         }
 
@@ -445,6 +483,8 @@ public class DockerClientConfig implements Serializable {
                     email,
                     serverAddress,
                     dockerCfgPath,
+                    httpUsername,
+                    httpPassword,
                     readTimeout,
                     loggingFilterEnabled,
                     sslConfig,
